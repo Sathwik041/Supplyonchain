@@ -16,6 +16,8 @@ contract EscrowFactory is Ownable {
     event EscrowCreated(address indexed escrowAddress, address indexed buyer, address indexed seller, uint256 totalAmount);
 
     constructor(address _passport, address _implementation) Ownable(msg.sender) {
+        require(_passport != address(0), "Invalid passport address");
+        require(_implementation != address(0), "Invalid implementation address");
         passport = _passport;
         implementation = _implementation;
     }

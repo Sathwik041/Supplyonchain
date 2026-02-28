@@ -243,9 +243,7 @@ const CreateContract: NextPage = () => {
         <div className="flex flex-col lg:flex-row gap-8 animate-in fade-in duration-700">
           <div className="card bg-base-100 shadow-xl border border-secondary/20 flex-1 rounded-sm overflow-hidden">
             <div className="card-body p-8 md:p-12">
-              <h2 className="card-title text-3xl text-primary mb-8 border-b pb-4 font-bold">
-                Create New Supply Chain Escrow
-              </h2>
+              <h2 className="card-title text-3xl text-primary mb-8 border-b pb-4 font-bold">Create New Contract</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                 <div className="space-y-6">
@@ -391,7 +389,7 @@ const CreateContract: NextPage = () => {
                   </div>
                   <div className="form-control w-full">
                     <label className="label">
-                      <span className="label-text font-semibold">Total Amount (ETH)</span>
+                      <span className="label-text font-semibold">Total Amount (MON)</span>
                     </label>
                     <input
                       type="number"
@@ -492,7 +490,7 @@ const CreateContract: NextPage = () => {
                   <div className="mt-4 space-y-4">
                     <div className="flex justify-between items-center border-b border-primary-content/20 pb-2">
                       <span className="text-sm font-medium uppercase opacity-60">Total Volume</span>
-                      <span className="text-xl font-black">{totalAmount || "0.00"} ETH</span>
+                      <span className="text-xl font-black">{totalAmount || "0.00"} MON</span>
                     </div>
                     <div className="space-y-4 pt-2">
                       <div className="flex justify-between items-start">
@@ -500,21 +498,21 @@ const CreateContract: NextPage = () => {
                           <span className="text-xs font-black uppercase opacity-70">Production</span>
                           <span className="text-[10px] opacity-60 font-bold">Initial (30%)</span>
                         </div>
-                        <span className="font-mono font-bold text-sm">{milestone1} ETH</span>
+                        <span className="font-mono font-bold text-sm">{milestone1} MON</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <div className="flex flex-col">
                           <span className="text-xs font-black uppercase opacity-70">Delivery</span>
                           <span className="text-[10px] opacity-60 font-bold">Verified (50%)</span>
                         </div>
-                        <span className="font-mono font-bold text-sm">{milestone2} ETH</span>
+                        <span className="font-mono font-bold text-sm">{milestone2} MON</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <div className="flex flex-col">
                           <span className="text-xs font-black uppercase opacity-70">Inspection</span>
                           <span className="text-[10px] opacity-60 font-bold">Final (20%)</span>
                         </div>
-                        <span className="font-mono font-bold text-sm">{milestone3} ETH</span>
+                        <span className="font-mono font-bold text-sm">{milestone3} MON</span>
                       </div>
                     </div>
                     <div className="bg-white/10 p-3 rounded-sm mt-4 text-xs">

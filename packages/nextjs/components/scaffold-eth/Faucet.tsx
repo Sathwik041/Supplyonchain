@@ -52,8 +52,11 @@ export const Faucet = () => {
         console.error("⚡️ ~ file: Faucet.tsx:getFaucetAddress ~ error", error);
       }
     };
-    getFaucetAddress();
-  }, []);
+
+    if (targetNetwork.id === hardhat.id) {
+      getFaucetAddress();
+    }
+  }, [targetNetwork.id]);
 
   const sendETH = async () => {
     if (!faucetAddress || !inputAddress) {

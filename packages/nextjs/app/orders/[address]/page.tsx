@@ -20,6 +20,7 @@ import {
   HomeIcon,
   ListBulletIcon,
   PaperClipIcon,
+  RocketLaunchIcon,
   ShieldCheckIcon,
   Square2StackIcon,
   TruckIcon,
@@ -27,7 +28,7 @@ import {
 } from "@heroicons/react/24/outline";
 import LogisticsTimeline, { EscrowStatus } from "~~/components/LogisticsTimeline";
 import deployedContractsData from "~~/contracts/deployedContracts";
-import { useTargetNetwork, useTransactor } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useTargetNetwork, useTransactor } from "~~/hooks/scaffold-eth";
 
 interface Order {
   address: string;
@@ -355,10 +356,80 @@ const OrderManagement: NextPage = () => {
           value: value,
         }),
       );
-      toast.success(`Action ${functionName} successful!`);
       fetchOrderDetails();
     } catch (e) {
       console.error(`Error in ${functionName}:`, e);
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleCompleteContract = async (isSellerClaim = false) => {
+    if (!targetNetwork || !order) return;
+    const escrowAbi = (deployedContractsData as any)[targetNetwork.id]?.SupplyChainEscrow?.abi;
+    if (!escrowAbi) return;
+
+    setIsActionLoading(true);
+    const notificationId = toast.loading("Generating Digital Machine Passport...");
+
+    try {
+      // 1. Prepare Metadata JSON
+      const metadata = {
+        name: `Machine Passport: ${order.item}`,
+        description: `Digital twin and provenance certificate for ${order.item} (Asset #${contractAddress.slice(-6)})`,
+        image: `https://gateway.pinata.cloud/ipfs/${order.poCid}`, // Default to PO as image if no machine photo
+        external_url: `https://supplyonchain.io/orders/${contractAddress}`,
+        attributes: [
+          { trait_type: "Buyer", value: order.buyer },
+          { trait_type: "Seller", value: order.seller },
+          { trait_type: "Item Name", value: order.item },
+          { trait_type: "Total Value", value: `${order.amount} MON` },
+          { trait_type: "Purchase Order", value: `ipfs://${order.poCid}` },
+          { trait_type: "Shipping Proof", value: `ipfs://${order.shippingCid}` },
+          { trait_type: "Carrier", value: order.shippingProvider },
+          { trait_type: "Tracking Number", value: order.trackingNumber },
+          { trait_type: "Production Updates", value: order.productionLogs.length },
+        ],
+        history: {
+          production_logs: order.productionLogs.map(log => `ipfs://${log}`),
+          shipping_docs: `ipfs://${order.shippingCid}`,
+          purchase_order: `ipfs://${order.poCid}`,
+        },
+      };
+
+      // 2. Upload Metadata to IPFS
+      const res = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          pinata_api_key: process.env.NEXT_PUBLIC_PINATA_API_KEY || "",
+          pinata_secret_api_key: process.env.NEXT_PUBLIC_PINATA_API_SECRET || "",
+        },
+        body: JSON.stringify({
+          pinataContent: metadata,
+          pinataMetadata: { name: `Passport_Metadata_${contractAddress}` },
+        }),
+      });
+
+      const resData = await res.json();
+      if (!resData.IpfsHash) throw new Error("Metadata upload failed");
+
+      // 3. Call Smart Contract
+      const functionName = isSellerClaim ? "sellerClaimFinalPayment" : "buyerCompletecontract";
+      await writeTx(() =>
+        writeContractAsync({
+          address: contractAddress as `0x${string}`,
+          abi: escrowAbi,
+          functionName: functionName as any,
+          args: [resData.IpfsHash],
+        }),
+      );
+
+      toast.success("Contract Finalized & Passport Issued!", { id: notificationId });
+      fetchOrderDetails();
+    } catch (e: any) {
+      console.error("Error finalizing contract:", e);
+      toast.error(`Error: ${e.message}`, { id: notificationId });
     } finally {
       setIsActionLoading(false);
     }
@@ -415,6 +486,18 @@ const OrderManagement: NextPage = () => {
       setIsActionLoading(false);
     }
   };
+
+  const { data: buyerNftBalance } = useScaffoldReadContract({
+    contractName: "MachinePassport",
+    functionName: "balanceOf",
+    args: [order?.buyer as `0x${string}`],
+  });
+
+  const { data: tokenId } = useScaffoldReadContract({
+    contractName: "MachinePassport",
+    functionName: "tokenOfOwnerByIndex",
+    args: [order?.buyer as `0x${string}`, 0n],
+  });
 
   if (loading || !order) {
     return (
@@ -586,7 +669,7 @@ const OrderManagement: NextPage = () => {
                         <div className="bg-primary/20 p-4 rounded-sm border border-primary/30 mb-6">
                           <p className="text-sm font-bold text-primary mb-0 flex items-center gap-2">
                             <ShieldCheckIcon className="h-5 w-5" />
-                            Depositing Total {order.amount} ETH and Auto Release {milestone1} ETH (30%) for seller to
+                            Depositing Total {order.amount} MON and Auto Release {milestone1} MON (30%) for seller to
                             start production.
                           </p>
                         </div>
@@ -607,7 +690,7 @@ const OrderManagement: NextPage = () => {
                           Contract terms accepted. Waiting for the buyer to fund the escrow.
                         </p>
                         <p className="text-xs opacity-50 italic">
-                          Production should commence immediately after the initial 30% ({milestone1} ETH) is released.
+                          Production should commence immediately after the initial 30% ({milestone1} MON) is released.
                         </p>
                       </div>
                     ) : null}
@@ -878,7 +961,7 @@ const OrderManagement: NextPage = () => {
                             className={`btn btn-success rounded-sm shadow-lg ${isActionLoading ? "loading" : ""}`}
                             onClick={() => handleAction("confirmDelivery")}
                           >
-                            Confirm Delivery & Release {milestone2} ETH
+                            Confirm Delivery & Release {milestone2} MON
                           </button>
                         </div>
                       </div>
@@ -925,9 +1008,9 @@ const OrderManagement: NextPage = () => {
                         </p>
                         <button
                           className={`btn btn-success rounded-sm shadow-lg ${isActionLoading ? "loading" : ""}`}
-                          onClick={() => handleAction("buyerCompletecontract")}
+                          onClick={() => handleCompleteContract(false)}
                         >
-                          Complete & Release {milestone3} ETH
+                          Complete & Release {milestone3} MON
                         </button>
                       </div>
                     ) : isSeller ? (
@@ -937,12 +1020,12 @@ const OrderManagement: NextPage = () => {
                         </p>
                         <button
                           className={`btn btn-primary rounded-sm shadow-lg ${isActionLoading ? "loading" : ""}`}
-                          onClick={() => handleAction("sellerClaimFinalPayment")}
+                          onClick={() => handleCompleteContract(true)}
                           disabled={Date.now() < Number(order.deliveredAt) * 1000 + 14 * 86400 * 1000}
                         >
                           {Date.now() < Number(order.deliveredAt) * 1000 + 14 * 86400 * 1000
                             ? "Inspection Period Active"
-                            : `Claim Final ${milestone3} ETH`}
+                            : `Claim Final ${milestone3} MON`}
                         </button>
                       </div>
                     ) : null}
@@ -965,6 +1048,29 @@ const OrderManagement: NextPage = () => {
                         This escrow has been successfully finalized. All funds have been transferred to the seller, and
                         the machine&apos;s provenance has been secured.
                       </p>
+
+                      {buyerNftBalance && buyerNftBalance > 0n && (
+                        <div className="mt-4 p-6 bg-white border border-success/30 rounded-sm shadow-sm w-full max-w-md animate-in zoom-in duration-500">
+                          <h4 className="text-xs font-black uppercase tracking-widest text-success mb-4 flex items-center justify-center gap-2">
+                            <RocketLaunchIcon className="h-4 w-4" /> Digital Machine Passport Issued
+                          </h4>
+                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-base-200">
+                            <span className="text-sm font-bold opacity-60">Token ID</span>
+                            <span className="font-mono font-black text-primary">#{tokenId?.toString()}</span>
+                          </div>
+                          <div className="space-y-3">
+                            <p className="text-[10px] uppercase font-black opacity-40 text-left">Provenance Link</p>
+                            <a
+                              href={`https://gateway.pinata.cloud/ipfs/${order.poCid}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn btn-outline btn-success btn-block btn-sm rounded-sm gap-2"
+                            >
+                              <ArrowTopRightOnSquareIcon className="h-4 w-4" /> View Digital Certificate
+                            </a>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1010,7 +1116,7 @@ const OrderManagement: NextPage = () => {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="stat bg-base-100 border border-base-300 rounded-sm p-4">
                     <div className="stat-title text-[10px] uppercase font-bold opacity-50">Total Value</div>
-                    <div className="stat-value text-2xl font-black text-primary">{order.amount} ETH</div>
+                    <div className="stat-value text-2xl font-black text-primary">{order.amount} MON</div>
                   </div>
                 </div>
 
@@ -1038,24 +1144,24 @@ const OrderManagement: NextPage = () => {
                         <div className="flex flex-col">
                           <span className="text-[10px] font-black uppercase opacity-60">1. Production (30%)</span>
                         </div>
-                        <span className="font-mono font-bold text-sm">{milestone1} ETH</span>
+                        <span className="font-mono font-bold text-sm">{milestone1} MON</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <div className="flex flex-col">
                           <span className="text-[10px] font-black uppercase opacity-60">2. Delivery (50%)</span>
                         </div>
-                        <span className="font-mono font-bold text-sm">{milestone2} ETH</span>
+                        <span className="font-mono font-bold text-sm">{milestone2} MON</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <div className="flex flex-col">
                           <span className="text-[10px] font-black uppercase opacity-60">3. Inspection (20%)</span>
                         </div>
-                        <span className="font-mono font-bold text-sm">{milestone3} ETH</span>
+                        <span className="font-mono font-bold text-sm">{milestone3} MON</span>
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t border-primary-content/10 flex justify-between items-center">
                       <span className="text-xs font-black uppercase">Total Volume</span>
-                      <span className="text-lg font-black">{order.amount} ETH</span>
+                      <span className="text-lg font-black">{order.amount} MON</span>
                     </div>
                   </div>
                 </div>

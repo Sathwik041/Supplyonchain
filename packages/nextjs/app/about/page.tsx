@@ -6,9 +6,9 @@ const About: NextPage = () => {
   return (
     <div className="flex flex-col items-center justify-center grow bg-base-200 py-20 px-4">
       <div className="max-w-3xl text-center">
-        <h1 className="text-4xl font-black mb-8">About SupplyOnChain</h1>
+        <h1 className="text-4xl font-black mb-8">About Supply-OnChain</h1>
         <p className="text-xl opacity-80 mb-6">
-          SupplyOnChain is a decentralized escrow protocol designed for high-value industrial transactions. By
+          Supply-OnChain is a decentralized escrow protocol designed for high-value industrial transactions. By
           leveraging smart contracts on the blockchain, we eliminate the need for traditional, expensive, and slow
           intermediaries.
         </p>

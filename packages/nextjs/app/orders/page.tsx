@@ -33,6 +33,8 @@ interface Order {
 interface PassportNFT {
   tokenId: number;
   uri: string;
+  name?: string;
+  isJson?: boolean;
 }
 
 const ViewOrders: NextPage = () => {
@@ -172,14 +174,33 @@ const ViewOrders: NextPage = () => {
             args: [connectedAddress, BigInt(i)],
           });
 
-          const uri = await publicClient.readContract({
+          const uri = (await publicClient.readContract({
             address: passportContractAddress as `0x${string}`,
             abi: machinePassportAbi,
             functionName: "tokenURI",
             args: [tokenId],
-          });
+          })) as string;
 
-          nftData.push({ tokenId: Number(tokenId), uri: uri as string });
+          let name = "Industrial Machine Asset";
+          let isJson = false;
+
+          // Attempt to fetch and parse if it looks like a JSON hash (not a raw file)
+          // For simplicity, we can check if it's a CID and then try to fetch its header
+          try {
+            const response = await fetch(`https://gateway.pinata.cloud/ipfs/${uri}`);
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const metadata = await response.json();
+              if (metadata.name) {
+                name = metadata.name;
+                isJson = true;
+              }
+            }
+          } catch {
+            // If it's just a raw file (PDF/Image), this might fail or return non-JSON, which is fine
+          }
+
+          nftData.push({ tokenId: Number(tokenId), uri, name, isJson });
         }
         setPassports(nftData);
       } catch (error) {
@@ -239,9 +260,11 @@ const ViewOrders: NextPage = () => {
                           <p className="text-lg font-mono font-black">#00{nft.tokenId}</p>
                         </div>
                       </div>
-                      <h3 className="text-xl font-black mb-1 leading-tight">Industrial Machine Asset</h3>
-                      <div className="badge badge-secondary badge-outline font-bold text-[10px] uppercase px-2 py-2 mb-4">
-                        Verified Proof-of-Specs
+                      <h3 className="text-xl font-black mb-1 leading-tight">{nft.name}</h3>
+                      <div
+                        className={`badge ${nft.isJson ? "badge-success" : "badge-secondary"} badge-outline font-bold text-[10px] uppercase px-2 py-2 mb-4`}
+                      >
+                        {nft.isJson ? "Full Digital Passport" : "Verified Proof-of-Specs"}
                       </div>
 
                       <div className="border-t border-base-200 pt-4 mt-2 flex flex-col gap-3">
@@ -360,7 +383,7 @@ const ViewOrders: NextPage = () => {
                           <div className="text-[10px] uppercase font-bold opacity-40 leading-none mb-1">
                             Total Value
                           </div>
-                          <div className="text-xl font-black text-primary">{order.amount} ETH</div>
+                          <div className="text-xl font-black text-primary">{order.amount} MON</div>
                         </div>
                         <div className="p-2 rounded-full bg-base-200 group-hover:bg-primary/10 group-hover:text-primary transition-all">
                           <ArrowRightIcon className="h-5 w-5" />

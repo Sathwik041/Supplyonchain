@@ -27,15 +27,33 @@ async function main() {
   }
 
   const encryptedKey = process.env.DEPLOYER_PRIVATE_KEY_ENCRYPTED;
+  const plainKey = process.env.PRIVATE_KEY;
 
-  if (!encryptedKey) {
+  if (!encryptedKey && !plainKey) {
     console.log("🚫️ You don't have a deployer account. Run `yarn generate` or `yarn account:import` first");
+    return;
+  }
+
+  if (plainKey && !encryptedKey) {
+    process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY = plainKey;
+    const hardhat = spawn("hardhat", ["deploy", ...process.argv.slice(2)], {
+      stdio: "inherit",
+      env: process.env,
+      shell: process.platform === "win32",
+    });
+
+    hardhat.on("exit", code => {
+      process.exit(code || 0);
+    });
     return;
   }
 
   const pass = await password({ message: "Enter password to decrypt private key:" });
 
   try {
+    if (!encryptedKey) {
+      throw new Error("Encrypted key is missing");
+    }
     const wallet = await Wallet.fromEncryptedJson(encryptedKey, pass);
     process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY = wallet.privateKey;
 

@@ -292,7 +292,7 @@ contract SupplyChainEscrow is ReentrancyGuard, Initializable {
     }
 
     ///Buyer Completes contract after checking the machine/item are working 
-    function buyerCompletecontract () external onlyBuyer nonReentrant {
+    function buyerCompletecontract (string memory _metadataCid) external onlyBuyer nonReentrant {
 
         require(delivered, "Item not yet delivered");
         require(!completed, "Contract already completed");
@@ -305,8 +305,8 @@ contract SupplyChainEscrow is ReentrancyGuard, Initializable {
                 (bool sent, ) = seller.call{value: amount}("");
                 require(sent, "Failed to send final payment");
         
-                // Mint Digital Passport NFT to buyer
-                IEscrowFactory(factory).mintPassport(buyer, poCid);
+                // Mint Digital Passport NFT to buyer with full metadata
+                IEscrowFactory(factory).mintPassport(buyer, _metadataCid);
         
                 emit FinalPaymentReleased(amount);
             }
@@ -314,7 +314,7 @@ contract SupplyChainEscrow is ReentrancyGuard, Initializable {
 
 
     /// Seller claims remaining funds if buyer doesn't complete or dispute within 14 days of delivery
-    function sellerClaimFinalPayment() external onlySeller notDisputed nonReentrant {
+    function sellerClaimFinalPayment(string memory _metadataCid) external onlySeller notDisputed nonReentrant {
         require(delivered, "Not delivered");
         require(!completed, "Already completed");
         require(block.timestamp > deliveredAt + 14 days, "Inspection period active");
@@ -327,8 +327,8 @@ contract SupplyChainEscrow is ReentrancyGuard, Initializable {
         (bool sent, ) = seller.call{value: amount}("");
         require(sent, "Transfer failed");
 
-        // Mint Digital Passport NFT to buyer
-        IEscrowFactory(factory).mintPassport(buyer, poCid);
+        // Mint Digital Passport NFT to buyer with full metadata
+        IEscrowFactory(factory).mintPassport(buyer, _metadataCid);
 
         emit FinalPaymentReleased(amount);
     }

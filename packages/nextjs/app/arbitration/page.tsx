@@ -225,7 +225,7 @@ const ArbitrationDashboard: NextPage = () => {
                       <div className="flex items-center gap-4">
                         <div className="bg-primary/10 px-4 py-2 rounded-sm border border-primary/20">
                           <span className="text-xs opacity-60 block">Disputed Amount</span>
-                          <span className="text-xl font-black text-primary">{order.amount} ETH</span>
+                          <span className="text-xl font-black text-primary">{order.amount} MON</span>
                         </div>
                         <a
                           href={`https://gateway.pinata.cloud/ipfs/${order.poCid}`}

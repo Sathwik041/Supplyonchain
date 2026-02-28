@@ -39,7 +39,16 @@ describe("SupplyChainEscrow via Factory", function () {
 
     const tx = await escrowFactory
       .connect(buyer)
-      .createEscrow(seller.address, arbitrator.address, totalAmount, itemName, quantity, deliveryDuration, poCid);
+      .createEscrow(
+        buyer.address,
+        seller.address,
+        arbitrator.address,
+        totalAmount,
+        itemName,
+        quantity,
+        deliveryDuration,
+        poCid,
+      );
     const receipt = await tx.wait();
 
     const event = receipt?.logs.find(log => (log as any).fragment?.name === "EscrowCreated") as any;
@@ -86,7 +95,7 @@ describe("SupplyChainEscrow via Factory", function () {
       );
 
       // Verify NFT Minting
-      const passportAddress = await escrowFactory.passportContract();
+      const passportAddress = await escrowFactory.passport();
       const passportContract = await ethers.getContractAt("MachinePassport", passportAddress);
       expect(await passportContract.balanceOf(buyer.address)).to.equal(1n);
     });

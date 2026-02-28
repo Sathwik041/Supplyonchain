@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import type { NextPage } from "next";
-import { ListBulletIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import {
+  ExclamationTriangleIcon,
+  IdentificationIcon,
+  ListBulletIcon,
+  PlusCircleIcon,
+} from "@heroicons/react/24/outline";
 
 const Dashboard: NextPage = () => {
   return (
@@ -23,6 +28,20 @@ const Dashboard: NextPage = () => {
           >
             <ListBulletIcon className="h-6 w-6" />
             View Orders
+          </Link>
+          <Link
+            href="/orders"
+            className="btn btn-accent btn-lg text-xl hover:scale-105 transition-transform flex gap-3"
+          >
+            <IdentificationIcon className="h-6 w-6" />
+            View Machine Passports
+          </Link>
+          <Link
+            href="/arbitration"
+            className="btn btn-error btn-lg text-xl hover:scale-105 transition-transform flex gap-3"
+          >
+            <ExclamationTriangleIcon className="h-6 w-6" />
+            View Order Disputes
           </Link>
         </div>
       </div>
