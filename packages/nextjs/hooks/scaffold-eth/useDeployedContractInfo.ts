@@ -65,13 +65,14 @@ export function useDeployedContractInfo<TContractName extends ContractName>(
         });
 
         // If contract code is `0x` => no contract deployed on that address
-        if (code === "0x") {
+        if (code === "0x" || !code) {
+          console.error(`Contract bytecode not found at ${deployedContract.address} on chain ${selectedNetwork.id}`);
           setStatus(ContractCodeStatus.NOT_FOUND);
           return;
         }
         setStatus(ContractCodeStatus.DEPLOYED);
       } catch (e) {
-        console.error(e);
+        console.error("Error checking contract deployment:", e);
         setStatus(ContractCodeStatus.NOT_FOUND);
       }
     };

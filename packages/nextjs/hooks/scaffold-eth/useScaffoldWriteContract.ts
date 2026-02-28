@@ -90,11 +90,6 @@ export function useScaffoldWriteContract<TContractName extends ContractName>(
     variables: ScaffoldWriteContractVariables<TContractName, TFunctionName>,
     options?: ScaffoldWriteContractOptions,
   ) => {
-    if (!deployedContractData) {
-      notification.error("Target Contract is not deployed, did you forget to run `yarn deploy`?");
-      return;
-    }
-
     if (!accountChain?.id) {
       notification.error("Please connect your wallet");
       return;
@@ -102,6 +97,11 @@ export function useScaffoldWriteContract<TContractName extends ContractName>(
 
     if (accountChain?.id !== selectedNetwork.id) {
       notification.error(`Wallet is connected to the wrong network. Please switch to ${selectedNetwork.name}`);
+      return;
+    }
+
+    if (!deployedContractData) {
+      notification.error("Target Contract is not deployed, did you forget to run `yarn deploy`?");
       return;
     }
 
@@ -152,10 +152,6 @@ export function useScaffoldWriteContract<TContractName extends ContractName>(
     variables: ScaffoldWriteContractVariables<TContractName, TFunctionName>,
     options?: Omit<ScaffoldWriteContractOptions, "onBlockConfirmation" | "blockConfirmations">,
   ) => {
-    if (!deployedContractData) {
-      notification.error("Target Contract is not deployed, did you forget to run `yarn deploy`?");
-      return;
-    }
     if (!accountChain?.id) {
       notification.error("Please connect your wallet");
       return;
@@ -163,6 +159,11 @@ export function useScaffoldWriteContract<TContractName extends ContractName>(
 
     if (accountChain?.id !== selectedNetwork.id) {
       notification.error(`Wallet is connected to the wrong network. Please switch to ${selectedNetwork.name}`);
+      return;
+    }
+
+    if (!deployedContractData) {
+      notification.error("Target Contract is not deployed, did you forget to run `yarn deploy`?");
       return;
     }
 
