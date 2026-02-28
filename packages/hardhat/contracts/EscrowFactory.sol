@@ -53,7 +53,7 @@ contract EscrowFactory is Ownable {
 
     function mintPassport(address to, string calldata uri) external {
         require(isEscrow[msg.sender], "Only escrows can mint");
-        MachinePassport(passport).mint(to, uri);
+        MachinePassport(passport).mintPassport(to, uri);
     }
 
     function getAllEscrows() external view returns (address[] memory) {
