@@ -1,0 +1,26 @@
+ ⚠ Found lockfile missing swc dependencies, patching...
+ ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+Error: Failed to get registry from "yarn".
+    at Array.map (<anonymous>) {
+  [cause]: Error: Command failed: yarn config get registry 
+      at Array.map (<anonymous>) {
+    status: 1,
+    signal: null,
+    output: [
+      null,
+      <Buffer 1b 5b 33 31 6d 1b 5b 31 6d 55 73 61 67 65 20 45 72 72 6f 72 1b 5b 32 32 6d 1b 5b 33 39 6d 3a 20 43 6f 75 6c 64 6e 27 74 20 66 69 6e 64 20 61 20 63 6f ... 98 more bytes>,
+      <Buffer >
+    ],
+    pid: 7557,
+    stdout: <Buffer 1b 5b 33 31 6d 1b 5b 31 6d 55 73 61 67 65 20 45 72 72 6f 72 1b 5b 32 32 6d 1b 5b 33 39 6d 3a 20 43 6f 75 6c 64 6e 27 74 20 66 69 6e 64 20 61 20 63 6f ... 98 more bytes>,
+    stderr: <Buffer >
+  }
+}
+ ⚠ Port 3000 is in use, trying 3001 instead.
+   ▲ Next.js 15.2.9
+   - Local:        http://localhost:3001
+   - Network:      http://10.255.255.254:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ⚠ Found lockfile missing swc dependencies, patching...
